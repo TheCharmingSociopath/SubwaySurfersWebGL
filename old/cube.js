@@ -107,6 +107,31 @@ function initBuffers(gl) {
      1.0, -1.0,  1.0,
      1.0,  1.0,  1.0,
     -1.0,  1.0,  1.0,
+    // Back face
+    -1.0, -1.0, -1.0,
+     1.0, -1.0, -1.0,
+     1.0,  1.0, -1.0,
+    -1.0,  1.0, -1.0,
+    // // Left face
+    // -1.0, -1.0,  1.0,
+    // -1.0,  1.0,  1.0,
+    // -1.0, -1.0, -1.0,
+    // -1.0,  1.0, -1.0,
+    // // Right face
+    //  1.0,  1.0,  1.0,
+    //  1.0, -1.0,  1.0,
+    //  1.0,  1.0, -1.0,
+    //  1.0, -1.0, -1.0,
+    //  // Top face
+    //  1.0,  1.0,  1.0,
+    // -1.0,  1.0,  1.0,
+    //  1.0,  1.0, -1.0,
+    // -1.0,  1.0, -1.0,
+    //  // Bottom face
+    // -1.0, -1.0,  1.0,
+    //  1.0, -1.0,  1.0,
+    // -1.0, -1.0, -1.0,
+    //  1.0, -1.0, -1.0,
   ];
 
   // Now pass the list of positions into WebGL to build the
@@ -119,6 +144,11 @@ function initBuffers(gl) {
   // for each face.
 
   const faceColors = [
+    [1.0,  0.0,  1.0,  1.0],    // Left face: purple
+    [1.0,  0.0,  1.0,  1.0],    // Left face: purple
+    [1.0,  0.0,  1.0,  1.0],    // Left face: purple
+    [1.0,  0.0,  1.0,  1.0],    // Left face: purple
+    [1.0,  0.0,  1.0,  1.0],    // Left face: purple
     [1.0,  0.0,  1.0,  1.0],    // Left face: purple
   ];
 
@@ -149,6 +179,11 @@ function initBuffers(gl) {
 
   const indices = [
     0,  1,  2,      0,  2,  3,    // front
+    4,  5,  6,      4,  6,  7,    // back
+    0,  3,  4,      4,  3,  7,    // left
+    1,  2,  5,      5,  2,  6,    // right
+    2,  3,  6,      6,  3,  7,    // top
+    0,  1,  4,      4,  1,  5,    // bottom
   ];
 
   // Now send the element array to GL
@@ -210,8 +245,15 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
 
   //Write your code to Rotate the cube here//
 
+  mat4.rotate(modelViewMatrix,
+              modelViewMatrix,
+              cubeRotation,
+              [0,1,1]);
 
-
+  mat4.rotate(modelViewMatrix,
+              modelViewMatrix,
+              cubeRotation * .7,
+              [0,1,0]);
 
   // Tell WebGL how to pull out the positions from the position
   // buffer into the vertexPosition attribute
@@ -272,7 +314,7 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
       modelViewMatrix);
 
   {
-    const vertexCount = 6;
+    const vertexCount = 36;
     const type = gl.UNSIGNED_SHORT;
     const offset = 0;
     gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
