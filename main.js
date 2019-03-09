@@ -11,7 +11,7 @@ function main() {
   
   player = new cube(gl, [0, 2, 0]);
 
-  for (i=0; i<200; ++i)
+  for (i=0; i<400; ++i)
   {
     tracks.push(new track(gl, [0, 0, -i]));
     tracks.push(new track(gl, [-2.0, 0, -i]));
@@ -23,8 +23,8 @@ function main() {
 
   for (i=0; i<1600; i += 8)
   {
-    walls.push(new wall(gl, [3, 2, -i]));
-    walls.push(new wall(gl, [-3, 2, -i]));
+    walls.push(new wall(gl, [3, 1, -i]));
+    walls.push(new wall(gl, [-3, 1, -i]));
   }
 
   for (i=0; i<40; i += 1)
@@ -35,7 +35,7 @@ function main() {
     else if (i % 3 == 2) coins.push(new coin(gl, [-2.0, 2, -z]));
   }
 
-  for(i=0; i<20; ++i)
+  for(i=0; i<5; ++i)
   {
     let z = Math.floor(Math.random() * 1000) % 400;
     if (i % 3 == 0) trains.push(new train(gl, [0, 2, -z]));
@@ -55,16 +55,30 @@ function main() {
   
   const vsSource = `
     attribute vec4 aVertexPosition;
+    attribute vec3 aVertexNormal;
     attribute vec2 aTextureCoord;
 
+    uniform mat4 uNormalMatrix;
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
 
     varying highp vec2 vTextureCoord;
+    varying highp vec3 vLighting;
 
     void main(void) {
       gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
       vTextureCoord = aTextureCoord;
+
+      // Apply lighting effect
+
+      highp vec3 ambientLight = vec3(1, 1, 1);
+      highp vec3 directionalLightColor = vec3(0.5, 0.5, 0.5);
+      highp vec3 directionalVector = normalize(vec3(0.0, 0.0, -1));
+
+      highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
+
+      highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
+      vLighting = ambientLight + (directionalLightColor * directional);
     }
   `;
 
@@ -72,11 +86,14 @@ function main() {
 
   const fsSource = `
     varying highp vec2 vTextureCoord;
+    varying highp vec3 vLighting;
 
     uniform sampler2D uSampler;
 
     void main(void) {
-      gl_FragColor = texture2D(uSampler, vTextureCoord);
+      highp vec4 texelColor = texture2D(uSampler, vTextureCoord);
+
+      gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
     }
   `;
     
@@ -92,11 +109,13 @@ function main() {
       program: shaderProgram,
       attribLocations: {
         vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+        vertexNormal: gl.getAttribLocation(shaderProgram, 'aVertexNormal'),
         textureCoord: gl.getAttribLocation(shaderProgram, 'aTextureCoord'),
       },
       uniformLocations: {
         projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
         modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+        normalMatrix: gl.getUniformLocation(shaderProgram, 'uNormalMatrix'),
         uSampler: gl.getUniformLocation(shaderProgram, 'uSampler'),
       },
     };
@@ -178,16 +197,16 @@ function drawScene(gl, programInfo, deltaTime) {
   
   for (t of tracks)
     t.drawTrack(gl, viewProjectionMatrix, programInfo, deltaTime);
-  
-  for (w of walls)
-    w.drawWall(gl, viewProjectionMatrix, programInfo, deltaTime);
-
-  for (t of trains)
+    
+    for (t of trains)
     t.drawTrain(gl, viewProjectionMatrix, programInfo, deltaTime);
-
-  for (c of coins)
+    
+    for (c of coins)
     c.drawCoin(gl, viewProjectionMatrix, programInfo, deltaTime);
-
+    
+    for (w of walls)
+      w.drawWall(gl, viewProjectionMatrix, programInfo, deltaTime);
+    
   player.drawCube(gl, viewProjectionMatrix, programInfo, deltaTime);
 }
 
@@ -330,6 +349,8 @@ function tick_input() {
 
 function tick_elements() {
   tick_input();
+  move_objects();
+  detect_collisions();
   player.pos[2] -= player.speed;
 
   for(t of trains)
@@ -344,4 +365,22 @@ function tick_elements() {
     if (player.acceleration <= -0.8)
       player.jump = false;
   }
+};
+
+function move_objects() {
+  for (t of trains)
+  {
+    if (t.pos[2] > player.pos[2] + 30)
+      t.pos[2] -= 100;
+  }
+  for (c of coins)
+  {
+    c.rotation += 0.1;
+    if (c.pos[2] > player.pos[2] + 30)
+      c.pos[2] -= 100;
+  }
+};
+
+function detect_collisions() {
+
 };

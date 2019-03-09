@@ -18,6 +18,20 @@ let track = class {
 
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.positions), gl.STATIC_DRAW);
 
+        const normalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+
+        let vertexNormals = [];
+
+        for (var j = 0; j < 4; ++j) {
+            vertexNormals.push(0);
+            vertexNormals.push(1);
+            vertexNormals.push(0);
+        }
+
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals),
+            gl.STATIC_DRAW);
+
         const textureCoordBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
 
@@ -52,6 +66,7 @@ let track = class {
 
         this.buffer = {
             position: this.positionBuffer,
+            normal: normalBuffer,
             textureCoord: textureCoordBuffer,
             indices: indexBuffer,
         }
@@ -71,6 +86,10 @@ let track = class {
             this.rotation,
             [0, 1, 0]);
 
+        const normalMatrix = mat4.create();
+        mat4.invert(normalMatrix, modelViewMatrix);
+        mat4.transpose(normalMatrix, normalMatrix);
+
         {
             const numComponents = 3;
             const type = gl.FLOAT;
@@ -87,6 +106,26 @@ let track = class {
                 offset);
             gl.enableVertexAttribArray(
                 programInfo.attribLocations.vertexPosition);
+        }
+
+        // Tell WebGL how to pull out the normals from
+        // the normal buffer into the vertexNormal attribute.
+        {
+            const numComponents = 3;
+            const type = gl.FLOAT;
+            const normalize = false;
+            const stride = 0;
+            const offset = 0;
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer.normal);
+            gl.vertexAttribPointer(
+                programInfo.attribLocations.vertexNormal,
+                numComponents,
+                type,
+                normalize,
+                stride,
+                offset);
+            gl.enableVertexAttribArray(
+                programInfo.attribLocations.vertexNormal);
         }
 
         // Tell WebGL how to pull out the texture coordinates from
@@ -120,6 +159,11 @@ let track = class {
             programInfo.uniformLocations.modelViewMatrix,
             false,
             modelViewMatrix);
+
+        gl.uniformMatrix4fv(
+            programInfo.uniformLocations.normalMatrix,
+            false,
+            normalMatrix);
 
         // Specify the texture to map onto the faces.
 

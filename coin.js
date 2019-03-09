@@ -9,6 +9,7 @@ let coin = class {
         this.acceleration = 0;
 
         this.positions = [];
+        this.rotation = 0;
         let arg = 0,
             arg1 = 0,
             a = 0.2,
@@ -18,60 +19,83 @@ let coin = class {
         for (var i = 0; i < n; ++i) {
             this.positions.push(0.0);
             this.positions.push(0.0);
-            this.positions.push(0.1);
+            this.positions.push(0.05);
 
             this.positions.push(a * Math.cos(arg));
             this.positions.push(a * Math.sin(arg));
-            this.positions.push(0.1);
+            this.positions.push(0.05);
 
             arg += (2 * Math.PI) / n;
 
             this.positions.push(a * Math.cos(arg));
             this.positions.push(a * Math.sin(arg));
-            this.positions.push(0.1);
+            this.positions.push(0.05);
 
             this.positions.push(0.0);
             this.positions.push(0.0);
-            this.positions.push(-0.1);
+            this.positions.push(-0.05);
 
             this.positions.push(b * Math.cos(arg1));
             this.positions.push(b * Math.sin(arg1));
-            this.positions.push(-0.1);
+            this.positions.push(-0.05);
 
             arg1 += (2 * Math.PI) / n;
 
             this.positions.push(b * Math.cos(arg1));
             this.positions.push(b * Math.sin(arg1));
-            this.positions.push(-0.1);
+            this.positions.push(-0.05);
 
             this.positions.push(a * Math.cos(arg - (2 * Math.PI) / n));
             this.positions.push(a * Math.sin(arg - (2 * Math.PI) / n));
-            this.positions.push(0.1);
+            this.positions.push(0.05);
 
             this.positions.push(b * Math.cos(arg1 - (2 * Math.PI) / n));
             this.positions.push(b * Math.sin(arg1 - (2 * Math.PI) / n));
-            this.positions.push(-0.1);
+            this.positions.push(-0.05);
 
             this.positions.push(b * Math.cos(arg1));
             this.positions.push(b * Math.sin(arg1));
-            this.positions.push(-0.1);
+            this.positions.push(-0.05);
 
             this.positions.push(a * Math.cos(arg - (2 * Math.PI) / n));
             this.positions.push(a * Math.sin(arg - (2 * Math.PI) / n));
-            this.positions.push(0.1);
+            this.positions.push(0.05);
 
             this.positions.push(a * Math.cos(arg));
             this.positions.push(a * Math.sin(arg));
-            this.positions.push(0.1);
+            this.positions.push(0.05);
 
             this.positions.push(b * Math.cos(arg1));
             this.positions.push(b * Math.sin(arg1));
-            this.positions.push(-0.1);
+            this.positions.push(-0.05);
         }
         this.rotation = 0;
 
         this.pos = pos;
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.positions), gl.STATIC_DRAW);
+
+        const normalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+
+        let vertexNormals = [];
+
+        for (var i = 0; i < n; ++i) {
+            for (var j=0; j<3; ++j)
+            {
+                vertexNormals.push (0);
+                vertexNormals.push (0);
+                vertexNormals.push (1);
+            }
+            for (var j=0; j<9; ++j)
+            {
+                vertexNormals.push (0);
+                vertexNormals.push (0);
+                vertexNormals.push (-1);
+            }
+        }
+
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals),
+            gl.STATIC_DRAW);
 
         const textureCoordBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
@@ -139,6 +163,7 @@ let coin = class {
 
         this.buffer = {
             position: this.positionBuffer,
+            normal: normalBuffer,
             textureCoord: textureCoordBuffer,
             // indices: indexBuffer,
         }
@@ -156,7 +181,11 @@ let coin = class {
         mat4.rotate(modelViewMatrix,
             modelViewMatrix,
             this.rotation,
-            [1, 0, 0]);
+            [0, 1, 0]);
+
+        const normalMatrix = mat4.create();
+        mat4.invert(normalMatrix, modelViewMatrix);
+        mat4.transpose(normalMatrix, normalMatrix);
 
         {
             const numComponents = 3;
@@ -174,6 +203,26 @@ let coin = class {
                 offset);
             gl.enableVertexAttribArray(
                 programInfo.attribLocations.vertexPosition);
+        }
+
+        // Tell WebGL how to pull out the normals from
+        // the normal buffer into the vertexNormal attribute.
+        {
+            const numComponents = 3;
+            const type = gl.FLOAT;
+            const normalize = false;
+            const stride = 0;
+            const offset = 0;
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer.normal);
+            gl.vertexAttribPointer(
+                programInfo.attribLocations.vertexNormal,
+                numComponents,
+                type,
+                normalize,
+                stride,
+                offset);
+            gl.enableVertexAttribArray(
+                programInfo.attribLocations.vertexNormal);
         }
 
         // Tell WebGL how to pull out the texture coordinates from
@@ -207,6 +256,11 @@ let coin = class {
             programInfo.uniformLocations.modelViewMatrix,
             false,
             modelViewMatrix);
+
+        gl.uniformMatrix4fv(
+            programInfo.uniformLocations.normalMatrix,
+            false,
+            normalMatrix);
 
         // Specify the texture to map onto the faces.
 
