@@ -15,7 +15,7 @@ let coin = class {
             b = 0.2,
             n = 50;
 
-        for (i = 0; i < n; ++i) {
+        for (var i = 0; i < n; ++i) {
             this.positions.push(0.0);
             this.positions.push(0.0);
             this.positions.push(0.1);
@@ -82,7 +82,7 @@ let coin = class {
         a = 0.5;
         b = 0.5;
 
-        for (i = 0; i < 50; ++i) {
+        for (var i = 0; i < 50; ++i) {
             textureCoordinates.push(0.5);
             textureCoordinates.push(0.5);
 

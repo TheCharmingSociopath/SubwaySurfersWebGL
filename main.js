@@ -27,22 +27,20 @@ function main() {
     walls.push(new wall(gl, [-3, 2, -i]));
   }
 
-  for (i=0; i<100; ++i)
+  for (i=0; i<40; i += 1)
   {
-    z = - Math.floor(Math.random() * 1000) % 400;
-    x = Math.floor(Math.random() * 10) % 5 - 2;
-    y = Math.floor(Math.random() * 10) % 2 + 2;
-    coins.push(new coin(gl, [x, y, z]));
+    let z = Math.floor(Math.random() * 100) % 50;
+    if (i % 3 == 0) coins.push(new coin(gl, [0, 2, -z]));
+    else if (i % 3 == 1) coins.push(new coin(gl, [2.0, 2, -z]));
+    else if (i % 3 == 2) coins.push(new coin(gl, [-2.0, 2, -z]));
   }
 
   for(i=0; i<20; ++i)
   {
     let z = Math.floor(Math.random() * 1000) % 400;
     if (i % 3 == 0) trains.push(new train(gl, [0, 2, -z]));
-    z = Math.floor(Math.random() * 1000) % 400;
-    if (i % 3 == 1) trains.push(new train(gl, [2.0, 2, -z]));
-    z = Math.floor(Math.random() * 1000) % 400;
-    if (i % 3 == 2) trains.push(new train(gl, [-2.0, 2, -z]));
+    else if (i % 3 == 1) trains.push(new train(gl, [2.0, 2, -z]));
+    else if (i % 3 == 2) trains.push(new train(gl, [-2.0, 2, -z]));
   }
   // trains.push(new train(gl, [0, 2, -10]));
 
@@ -127,7 +125,7 @@ function main() {
 // Draw the scene.
 //
 function drawScene(gl, programInfo, deltaTime) {
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);  // Clear to black, fully opaque
+  gl.clearColor(0.15, 0.59, 1.0, 1.0);  // Clear to black, fully opaque
   gl.clearDepth(1.0);                 // Clear everything
   gl.enable(gl.DEPTH_TEST);           // Enable depth testing
   gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
@@ -332,7 +330,7 @@ function tick_input() {
 
 function tick_elements() {
   tick_input();
-  // player.pos[2] -= player.speed;
+  player.pos[2] -= player.speed;
 
   for(t of trains)
   {
