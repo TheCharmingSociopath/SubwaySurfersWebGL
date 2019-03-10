@@ -190,7 +190,7 @@ function drawScene(gl, programInfo, deltaTime) {
   // and we only want to see objects between 0.1 units
   // and 100 units away from the camera.
 
-  eye = [0, 5, player.pos[2] + 4];
+  eye = [0, 5, player.pos[2] + 8];
   target = [0, player.pos[1], player.pos[2] - 5];
 
   const fieldOfView = 45 * Math.PI / 180; // in radians
@@ -455,8 +455,21 @@ function collisions() {
 
   for (t of trains) {
     if (detect_collisions(t.bounding_box, player.bounding_box)) {
-      death_sound.play();
-      game_over = true;
+
+      if (player.pos[2] + 2 > t.pos[2])
+      {
+        death_sound.play();
+        game_over = true;
+      }
+      else {
+        player.speed = 0.1;
+        setTimeout (
+          function slow() {
+            player.speed = 0.2;
+          },
+          2000,
+        );
+      }
     }
   }
 
