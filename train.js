@@ -7,6 +7,24 @@ let train = class {
         this.len_x = 0.8;
         this.len_y = 2;
         this.len_z = 2;
+        this.bounding_box = {
+            len_x : 1.6,
+            len_y : 4,
+            len_z : 4,
+            x : pos[0],
+            y : pos[1],
+            z : pos[2],
+          }
+
+        // this.bounding_box = [
+        //     1.6,
+        //     4,
+        //     4,
+        //     pos[0],
+        //     pos[1],
+        //     pos[2],
+        // ];
+          
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
 
         this.positions = [
@@ -162,6 +180,17 @@ let train = class {
             indices: indexBuffer,
         }
         this.texture = loadTexture(gl, 'images/train_side.jpg');
+    }
+
+    tick() {
+        this.bounding_box = {
+            len_x : 1.6,
+            len_y : 4,
+            len_z : 4,
+            x : pos[0],
+            y : pos[1],
+            z : pos[2],
+          }
     }
 
     drawTrain(gl, projectionMatrix, programInfo, deltaTime) {

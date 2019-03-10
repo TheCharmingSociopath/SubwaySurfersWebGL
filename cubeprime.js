@@ -5,40 +5,62 @@ let cube = class {
         this.positionBuffer = gl.createBuffer();
         this.jump = false;
         this.speed = 0.2;
+        this.jetpack = false;
+        this.sneaker = false;
+        this.jetTime = 0;
+        this.sneakerTime = 0;
         this.acceleration = 0;
+        this.bounding_box = {
+            len_x : 1,
+            len_y : 1,
+            len_z : 1,
+            x : pos[0],
+            y : pos[1],
+            z : pos[2],
+          }
+        //   this.bounding_box = [
+        //     0.6,
+        //     1.2,
+        //     0.2,
+        //     pos[0],
+        //     pos[1],
+        //     pos[2],
+        //   ];
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+
+        var len_x = 0.3, len_y = 0.6, len_z = 0.1;
 
         this.positions = [
             // Front face
-            -0.5, -0.5, 0.5,
-            0.5, -0.5, 0.5,
-            0.5, 0.5, 0.5,
-            -0.5, 0.5, 0.5,
+            -len_x, -len_y, len_z,
+            len_x, -len_y, len_z,
+            len_x, len_y, len_z,
+            -len_x, len_y, len_z,
             //Back Face
-            -0.5, -0.5, -0.5,
-            0.5, -0.5, -0.5,
-            0.5, 0.5, -0.5,
-            -0.5, 0.5, -0.5,
+            -len_x, -len_y, -len_z,
+            len_x, -len_y, -len_z,
+            len_x, len_y, -len_z,
+            -len_x, len_y, -len_z,
             //Top Face
-            -0.5, 0.5, -0.5,
-            0.5, 0.5, -0.5,
-            0.5, 0.5, 0.5,
-            -0.5, 0.5, 0.5,
+            -len_x, len_y, -len_z,
+            len_x, len_y, -len_z,
+            len_x, len_y, len_z,
+            -len_x, len_y, len_z,
             //Bottom Face
-            -0.5, -0.5, -0.5,
-            0.5, -0.5, -0.5,
-            0.5, -0.5, 0.5,
-            -0.5, -0.5, 0.5,
+            -len_x, -len_y, -len_z,
+            len_x, -len_y, -len_z,
+            len_x, -len_y, len_z,
+            -len_x, -len_y, len_z,
             //Left Face
-            -0.5, -0.5, -0.5,
-            -0.5, 0.5, -0.5,
-            -0.5, 0.5, 0.5,
-            -0.5, -0.5, 0.5,
+            -len_x, -len_y, -len_z,
+            -len_x, len_y, -len_z,
+            -len_x, len_y, len_z,
+            -len_x, -len_y, len_z,
             //Right Face
-            0.5, -0.5, -0.5,
-            0.5, 0.5, -0.5,
-            0.5, 0.5, 0.5,
-            0.5, -0.5, 0.5,
+            len_x, -len_y, -len_z,
+            len_x, len_y, -len_z,
+            len_x, len_y, len_z,
+            len_x, -len_y, len_z,
         ];
 
         this.rotation = 0;
@@ -162,6 +184,17 @@ let cube = class {
         }
         this.texture = loadTexture(gl, 'images/wall.jpg');
     }
+
+    tick() {
+        this.bounding_box = {
+            len_x : 0.4,
+            len_y : 0.4,
+            len_z : 0.1,
+            x : this.pos[0],
+            y : this.pos[1],
+            z : this.pos[2],
+          }
+    };
 
     drawCube(gl, projectionMatrix, programInfo, deltaTime) {
         const modelViewMatrix = mat4.create();

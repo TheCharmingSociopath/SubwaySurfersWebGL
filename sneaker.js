@@ -1,108 +1,114 @@
 /// <reference path="webgl.d.ts" />
 
-let coin = class {
+let sneaker = class {
     constructor(gl, pos) {
         this.positionBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
         this.jump = false;
         this.speed = 0.2;
+        this.jetpack = false;
+        this.sneaker = false;
+        this.jetTime = 0;
+        this.sneakerTime = 0;
         this.acceleration = 0;
-
         this.bounding_box = {
             len_x : 0.4,
-            len_y : 0.4,
-            len_z : 0.1,
+            len_y : 0.6,
+            len_z : 0.2,
             x : pos[0],
             y : pos[1],
             z : pos[2],
           }
-        // this.bounding_box = [
+        //   this.bounding_box = [
         //     0.4,
-        //     0.4,
-        //     0.1,
+        //     0.6,
+        //     0.2,
         //     pos[0],
         //     pos[1],
         //     pos[2],
-        // ];
-        this.positions = [];
-        this.rotation = 0;
-        let arg = 0,
-            arg1 = 0,
-            a = 0.2,
-            b = 0.2,
-            n = 50;
+        //   ];
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
 
-        for (var i = 0; i < n; ++i) {
-            this.positions.push(0.0);
-            this.positions.push(0.0);
-            this.positions.push(0.05);
+        var len_x = 0.2, len_y = 0.3, len_z = 0.1;
 
-            this.positions.push(a * Math.cos(arg));
-            this.positions.push(a * Math.sin(arg));
-            this.positions.push(0.05);
+        this.positions = [
+            // Front face
+            -len_x, -len_y, len_z,
+            len_x, -len_y, len_z,
+            len_x, len_y, len_z,
+            -len_x, len_y, len_z,
+            //Back Face
+            -len_x, -len_y, -len_z,
+            len_x, -len_y, -len_z,
+            len_x, len_y, -len_z,
+            -len_x, len_y, -len_z,
+            //Top Face
+            -len_x, len_y, -len_z,
+            len_x, len_y, -len_z,
+            len_x, len_y, len_z,
+            -len_x, len_y, len_z,
+            //Bottom Face
+            -len_x, -len_y, -len_z,
+            len_x, -len_y, -len_z,
+            len_x, -len_y, len_z,
+            -len_x, -len_y, len_z,
+            //Left Face
+            -len_x, -len_y, -len_z,
+            -len_x, len_y, -len_z,
+            -len_x, len_y, len_z,
+            -len_x, -len_y, len_z,
+            //Right Face
+            len_x, -len_y, -len_z,
+            len_x, len_y, -len_z,
+            len_x, len_y, len_z,
+            len_x, -len_y, len_z,
+        ];
 
-            arg += (2 * Math.PI) / n;
-
-            this.positions.push(a * Math.cos(arg));
-            this.positions.push(a * Math.sin(arg));
-            this.positions.push(0.05);
-
-            this.positions.push(0.0);
-            this.positions.push(0.0);
-            this.positions.push(-0.05);
-
-            this.positions.push(b * Math.cos(arg1));
-            this.positions.push(b * Math.sin(arg1));
-            this.positions.push(-0.05);
-
-            arg1 += (2 * Math.PI) / n;
-
-            this.positions.push(b * Math.cos(arg1));
-            this.positions.push(b * Math.sin(arg1));
-            this.positions.push(-0.05);
-
-            this.positions.push(a * Math.cos(arg - (2 * Math.PI) / n));
-            this.positions.push(a * Math.sin(arg - (2 * Math.PI) / n));
-            this.positions.push(0.05);
-
-            this.positions.push(b * Math.cos(arg1 - (2 * Math.PI) / n));
-            this.positions.push(b * Math.sin(arg1 - (2 * Math.PI) / n));
-            this.positions.push(-0.05);
-
-            this.positions.push(b * Math.cos(arg1));
-            this.positions.push(b * Math.sin(arg1));
-            this.positions.push(-0.05);
-
-            this.positions.push(a * Math.cos(arg - (2 * Math.PI) / n));
-            this.positions.push(a * Math.sin(arg - (2 * Math.PI) / n));
-            this.positions.push(0.05);
-
-            this.positions.push(a * Math.cos(arg));
-            this.positions.push(a * Math.sin(arg));
-            this.positions.push(0.05);
-
-            this.positions.push(b * Math.cos(arg1));
-            this.positions.push(b * Math.sin(arg1));
-            this.positions.push(-0.05);
-        }
         this.rotation = 0;
 
         this.pos = pos;
+
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.positions), gl.STATIC_DRAW);
 
         const normalBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
 
-        let vertexNormals = [];
+        const vertexNormals = [
+            // Front
+            0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0,
 
-        for (var i = 0; i < n; ++i) {
-            for (var j=0; j<12; ++j)
-            {
-                vertexNormals.push (1);
-                vertexNormals.push (1);
-                vertexNormals.push (1);
-            }
-        }
+            // Back
+            0.0, 0.0, -1.0,
+            0.0, 0.0, -1.0,
+            0.0, 0.0, -1.0,
+            0.0, 0.0, -1.0,
+
+            // Top
+            0.0, 1.0, 0.0,
+            0.0, 1.0, 0.0,
+            0.0, 1.0, 0.0,
+            0.0, 1.0, 0.0,
+
+            // Bottom
+            0.0, -1.0, 0.0,
+            0.0, -1.0, 0.0,
+            0.0, -1.0, 0.0,
+            0.0, -1.0, 0.0,
+
+            // Right
+            1.0, 0.0, 0.0,
+            1.0, 0.0, 0.0,
+            1.0, 0.0, 0.0,
+            1.0, 0.0, 0.0,
+
+            // Left
+            -1.0, 0.0, 0.0,
+            -1.0, 0.0, 0.0,
+            -1.0, 0.0, 0.0,
+            -1.0, 0.0, 0.0
+        ];
 
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals),
             gl.STATIC_DRAW);
@@ -110,88 +116,87 @@ let coin = class {
         const textureCoordBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
 
-        let textureCoordinates = [];
-        arg = 0;
-        arg1 = 0;
-        a = 0.5;
-        b = 0.5;
+        const textureCoordinates = [
+            // Front
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+            // Back
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+            // Top
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+            // Bottom
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+            // Right
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+            // Left
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+        ];
 
-        for (var i = 0; i < 50; ++i) {
-            textureCoordinates.push(0.5);
-            textureCoordinates.push(0.5);
-
-            textureCoordinates.push(0.5 + a * Math.cos(arg));
-            textureCoordinates.push(0.5 + a * Math.sin(arg));
-
-            arg += (2 * Math.PI) / n;
-
-            textureCoordinates.push(0.5 + a * Math.cos(arg));
-            textureCoordinates.push(0.5 + a * Math.sin(arg));
-
-            textureCoordinates.push(0.5);
-            textureCoordinates.push(0.5);
-
-            textureCoordinates.push(0.5 + b * Math.cos(arg1));
-            textureCoordinates.push(0.5 + b * Math.sin(arg1));
-
-            arg1 += (2 * Math.PI) / n;
-
-            textureCoordinates.push(0.5 + b * Math.cos(arg1));
-            textureCoordinates.push(0.5 + b * Math.sin(arg1));
-
-            for (let j = 0; j < 12; ++j)
-                textureCoordinates.push(0.5);
-        }
-
-        // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.textureCoordinates), gl.STATIC_DRAW);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates),
             gl.STATIC_DRAW);
 
         // Build the element array buffer; this specifies the indices
         // into the vertex arrays for each face's vertices.
 
-        // const indexBuffer = gl.createBuffer();
-        // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        const indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
         // This array defines each face as two triangles, using the
         // indices into the vertex array to specify each triangle's
         // position.
 
-        // const indices = [
-        //     0, 1, 2, 0, 2, 3, // front
-        //     4, 5, 6, 4, 6, 7,
-        //     8, 9, 10, 8, 10, 11,
-        //     12, 13, 14, 12, 14, 15,
-        //     16, 17, 18, 16, 18, 19,
-        //     20, 21, 22, 20, 22, 23,
-        // ];
+        const indices = [
+            0, 1, 2, 0, 2, 3, // front
+            4, 5, 6, 4, 6, 7,
+            8, 9, 10, 8, 10, 11,
+            12, 13, 14, 12, 14, 15,
+            16, 17, 18, 16, 18, 19,
+            20, 21, 22, 20, 22, 23,
+        ];
 
-        // // Now send the element array to GL
+        // Now send the element array to GL
 
-        // gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
-        //     new Uint16Array(indices), gl.STATIC_DRAW);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
+            new Uint16Array(indices), gl.STATIC_DRAW);
 
         this.buffer = {
             position: this.positionBuffer,
             normal: normalBuffer,
             textureCoord: textureCoordBuffer,
-            // indices: indexBuffer,
+            indices: indexBuffer,
         }
-        this.texture = loadTexture(gl, 'images/coin.png');
+        this.texture = loadTexture(gl, 'images/sneaker.jpg');
     }
 
     tick() {
         this.bounding_box = {
             len_x : 0.4,
-            len_y : 0.4,
-            len_z : 0.1,
+            len_y : 0.6,
+            len_z : 0.2,
             x : pos[0],
             y : pos[1],
             z : pos[2],
           }
     }
 
-    drawCoin(gl, projectionMatrix, programInfo, deltaTime) {
+    drawSneaker(gl, projectionMatrix, programInfo, deltaTime) {
         const modelViewMatrix = mat4.create();
         mat4.translate(
             modelViewMatrix,
@@ -202,7 +207,7 @@ let coin = class {
         mat4.rotate(modelViewMatrix,
             modelViewMatrix,
             this.rotation,
-            [0, 1, 0]);
+            [1, 0, 0]);
 
         const normalMatrix = mat4.create();
         mat4.invert(normalMatrix, modelViewMatrix);
@@ -295,10 +300,11 @@ let coin = class {
         gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
 
         {
-            const vertexCount = 12 * 50;
+            const vertexCount = 36;
             const type = gl.UNSIGNED_SHORT;
             const offset = 0;
-            gl.drawArrays(gl.TRIANGLES, offset, vertexCount);
+            gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
         }
+
     }
 };
