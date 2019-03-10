@@ -1,10 +1,13 @@
 var map = {
   37: false,
   39: false,
-  32: false
+  32: false,
+  71: false,
 };
-var inp_left, inp_right;
-var player, tracks = [],
+
+var inp_left, inp_right, inp_grey;
+var player,
+  tracks = [],
   walls = [],
   trains = [],
   coins = [],
@@ -17,6 +20,10 @@ var game_over = false;
 
 var coin_sound = new Audio('./audio/coin.wav');
 var death_sound = new Audio('./audio/death.wav');
+
+var programInfo = {},
+  programInfo2Grey = {},
+  programInfoColour = {};
 
 main();
 
@@ -121,15 +128,35 @@ function main() {
     }
   `;
 
+  const fsSource1 = `
+    varying highp vec2 vTextureCoord;
+    varying highp vec3 vLighting;
+
+    uniform sampler2D uSampler;
+
+    void main(void) {
+      highp vec4 texelColor = texture2D(uSampler, vTextureCoord);
+
+      gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
+
+      precision highp float;
+      vec4 color = texture2D(uSampler, vTextureCoord);
+      float gray = dot(color.rgb,vec3(0.299,0.587,0.114));
+      gl_FragColor = vec4(vec3(gray),1.0);
+    }
+  `;
+
   // Initialize a shader program; this is where all the lighting
   // for the vertices and so forth is established.
   const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+  const shaderProgram1 = initShaderProgram(gl, vsSource, fsSource1);
 
   // Collect all the info needed to use the shader program.
   // Look up which attributes our shader program is using
   // for aVertexPosition, aVevrtexColor and also
   // look up uniform locations.
-  const programInfo = {
+
+  programInfoColour = {
     program: shaderProgram,
     attribLocations: {
       vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
@@ -143,6 +170,23 @@ function main() {
       uSampler: gl.getUniformLocation(shaderProgram, 'uSampler'),
     },
   };
+
+  programInfo2Grey = {
+    program: shaderProgram1,
+    attribLocations: {
+      vertexPosition: gl.getAttribLocation(shaderProgram1, 'aVertexPosition'),
+      vertexNormal: gl.getAttribLocation(shaderProgram1, 'aVertexNormal'),
+      textureCoord: gl.getAttribLocation(shaderProgram1, 'aTextureCoord'),
+    },
+    uniformLocations: {
+      projectionMatrix: gl.getUniformLocation(shaderProgram1, 'uProjectionMatrix'),
+      modelViewMatrix: gl.getUniformLocation(shaderProgram1, 'uModelViewMatrix'),
+      normalMatrix: gl.getUniformLocation(shaderProgram1, 'uNormalMatrix'),
+      uSampler: gl.getUniformLocation(shaderProgram1, 'uSampler'),
+    },
+  };
+
+  programInfo = programInfoColour;
 
   // Here's where we call the routine that builds all the
   // objects we'll be drawing.
@@ -381,12 +425,32 @@ function tick_input() {
       }
     }
   }
+  if (map[71]) // left
+    inp_grey = true;
+  else if (inp_grey) {
+    if (programInfo == programInfoColour) programInfo = programInfo2Grey;
+    else programInfo = programInfoColour;
+    inp_grey = false;
+    console.log('erer');
+  }
 };
 
 function tick_elements() {
   tick_input();
   move_objects();
   collisions();
+
+  document.getElementById('score').innerHTML = 'Score: ' + score;
+  document.getElementById('coins').innerHTML = 'Coins: ' + coins_collected;
+
+  if (game_over) {
+    document.getElementById('game').innerHTML = 'Game Over';
+  }
+
+  if (player.pos[2] <= -400) {
+    document.getElementById('game').innerHTML = 'Game Complete';
+  }
+
   if ((-player.pos[2]) % 2 == 0) ++score;
   player.pos[2] -= player.speed;
 
@@ -404,13 +468,10 @@ function tick_elements() {
   if (player.jump) {
     player.pos[1] += player.acceleration;
     player.acceleration -= 0.1;
-    if (!player.sneaker && player.acceleration <= -0.8)
-    {
+    if (!player.sneaker && player.acceleration <= -0.8) {
       player.jump = false;
       player.pos[1] = 2;
-    }
-    else if (player.sneaker && player.acceleration <= -1.2)
-    {
+    } else if (player.sneaker && player.acceleration <= -1.2) {
       player.jump = false;
       player.pos[1] = 2;
     }
@@ -456,14 +517,12 @@ function collisions() {
   for (t of trains) {
     if (detect_collisions(t.bounding_box, player.bounding_box)) {
 
-      if (player.pos[2] + 2 > t.pos[2])
-      {
+      if (player.pos[2] + 2 > t.pos[2]) {
         death_sound.play();
         game_over = true;
-      }
-      else {
+      } else {
         player.speed = 0.1;
-        setTimeout (
+        setTimeout(
           function slow() {
             player.speed = 0.2;
           },
