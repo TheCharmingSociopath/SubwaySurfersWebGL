@@ -8,11 +8,15 @@ var player, tracks = [],
   walls = [],
   trains = [],
   coins = [],
+  barricades = [],
   coins_collected = 0,
   jetpacks = 0,
   sneakers = 0,
   score = 0;
 var game_over = false;
+
+var coin_sound = new Audio('./audio/coin.wav');
+var death_sound = new Audio('./audio/death.wav');
 
 main();
 
@@ -37,8 +41,8 @@ function main() {
     walls.push(new wall(gl, [-3, 1, -i]));
   }
 
-  let z = Math.floor(Math.random() * 100) % 20;
-  let z1 = Math.floor(Math.random() * 100) % 20;
+  let z = Math.floor(Math.random() * 100) % 200;
+  let z1 = Math.floor(Math.random() * 100) % 200;
 
   jetpacks = new jetpack(gl, [0, 2, player.pos[2] - z]);
   sneakers = new sneaker(gl, [0, 2, player.pos[2] - z1]);
@@ -56,7 +60,13 @@ function main() {
     else if (i % 3 == 1) trains.push(new train(gl, [2.0, 2, -z]));
     else if (i % 3 == 2) trains.push(new train(gl, [-2.0, 2, -z]));
   }
-  // trains.push(new train(gl, [0, 2, -10]));
+
+  for (i = 0; i < 5; ++i) {
+    let z = Math.floor(Math.random() * 1000) % 400;
+    if (i % 3 == 0) barricades.push(new barricade(gl, [0, 2, -z]));
+    else if (i % 3 == 1) barricades.push(new barricade(gl, [2.0, 2, -z]));
+    else if (i % 3 == 2) barricades.push(new barricade(gl, [-2.0, 2, -z]));
+  }
 
   // If we don't have a GL context, give up now
 
@@ -227,6 +237,9 @@ function drawScene(gl, programInfo, deltaTime) {
   for (w of walls)
     w.drawWall(gl, viewProjectionMatrix, programInfo, deltaTime);
 
+  for (b of barricades)
+    b.drawBarricade(gl, viewProjectionMatrix, programInfo, deltaTime);
+
   player.drawCube(gl, viewProjectionMatrix, programInfo, deltaTime);
 
   jetpacks.drawJetpack(gl, viewProjectionMatrix, programInfo, deltaTime);
@@ -375,7 +388,7 @@ function tick_elements() {
   move_objects();
   collisions();
   if ((-player.pos[2]) % 2 == 0) ++score;
-  // player.pos[2] -= player.speed;
+  player.pos[2] -= player.speed;
 
   for (t of trains) {
     t.tick();
@@ -391,9 +404,19 @@ function tick_elements() {
   if (player.jump) {
     player.pos[1] += player.acceleration;
     player.acceleration -= 0.1;
-    if (player.acceleration <= -0.8)
+    if (!player.sneaker && player.acceleration <= -0.8)
+    {
       player.jump = false;
+      player.pos[1] = 2;
+    }
+    else if (player.sneaker && player.acceleration <= -1.2)
+    {
+      player.jump = false;
+      player.pos[1] = 2;
+    }
   }
+
+  if (player.pos[1] <= 2) player.pos[1] = 2;
 
   if (player.jetpack) {
     player.pos[1] += 0.1;
@@ -408,6 +431,12 @@ function move_objects() {
     if (t.pos[2] > player.pos[2] + 30)
       t.pos[2] -= 100;
   }
+
+  for (b of barricades) {
+    if (b.pos[2] > player.pos[2] + 30)
+      b.pos[2] -= 100;
+  }
+
   for (c of coins) {
     c.rotation += 0.1;
     if (c.pos[2] > player.pos[2] + 30)
@@ -420,16 +449,43 @@ function collisions() {
     if (detect_collisions(c.bounding_box, player.bounding_box)) {
       c.pos[2] -= 100;
       coins_collected += 1;
-      console.log('COIN!');
+      coin_sound.play();
     }
   }
 
   for (t of trains) {
-    console.log(t.bounding_box, player.bounding_box)
     if (detect_collisions(t.bounding_box, player.bounding_box)) {
-      console.log('GAME OVER');
+      death_sound.play();
       game_over = true;
     }
+  }
+
+  for (b of barricades) {
+    if (detect_collisions(b.bounding_box, player.bounding_box)) {
+      death_sound.play();
+      game_over = true;
+    }
+  }
+
+  if (detect_collisions(sneakers.bounding_box, player.bounding_box)) {
+    player.sneaker = true;
+    setTimeout(
+      function remove_sneaker() {
+        this.sneaker = false;
+      },
+      10000,
+    );
+  }
+  if (detect_collisions(jetpacks.bounding_box, player.bounding_box)) {
+    player.jetpack = true;
+    setTimeout(
+      function remove_jetpack() {
+        player.jetpack = false;
+        player.jump = true;
+        player.acceleration = -0.8;
+      },
+      10000,
+    );
   }
 };
 
@@ -438,6 +494,6 @@ function detect_collisions(a, b) {
     (Math.abs(a.y - b.y) * 2 < (a.len_y + b.len_y)) &&
     (Math.abs(a.z - b.z) * 2 < (a.len_z + b.len_z));
   // console.log (a, b);
-  console.log(temp);
+  // console.log(temp);
   return temp;
 };

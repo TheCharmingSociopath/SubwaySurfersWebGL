@@ -7,13 +7,11 @@ let cube = class {
         this.speed = 0.2;
         this.jetpack = false;
         this.sneaker = false;
-        this.jetTime = 0;
-        this.sneakerTime = 0;
         this.acceleration = 0;
         this.bounding_box = {
-            len_x : 1,
-            len_y : 1,
-            len_z : 1,
+            len_x : 0.6,
+            len_y : 1.2,
+            len_z : 0.2,
             x : pos[0],
             y : pos[1],
             z : pos[2],
@@ -187,9 +185,9 @@ let cube = class {
 
     tick() {
         this.bounding_box = {
-            len_x : 0.4,
-            len_y : 0.4,
-            len_z : 0.1,
+            len_x : 0.6,
+            len_y : 1.2,
+            len_z : 0.2,
             x : this.pos[0],
             y : this.pos[1],
             z : this.pos[2],

@@ -185,9 +185,9 @@ let coin = class {
             len_x : 0.4,
             len_y : 0.4,
             len_z : 0.1,
-            x : pos[0],
-            y : pos[1],
-            z : pos[2],
+            x : this.pos[0],
+            y : this.pos[1],
+            z : this.pos[2],
           }
     }
 

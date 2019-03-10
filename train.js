@@ -187,9 +187,9 @@ let train = class {
             len_x : 1.6,
             len_y : 4,
             len_z : 4,
-            x : pos[0],
-            y : pos[1],
-            z : pos[2],
+            x : this.pos[0],
+            y : this.pos[1],
+            z : this.pos[2],
           }
     }
 

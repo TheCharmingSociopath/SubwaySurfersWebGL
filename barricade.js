@@ -1,26 +1,24 @@
 /// <reference path="webgl.d.ts" />
 
-let sneaker = class {
+let barricade = class {
     constructor(gl, pos) {
         this.positionBuffer = gl.createBuffer();
         this.jump = false;
         this.speed = 0.2;
         this.jetpack = false;
         this.sneaker = false;
-        this.jetTime = 0;
-        this.sneakerTime = 0;
         this.acceleration = 0;
         this.bounding_box = {
-            len_x : 0.4,
-            len_y : 0.6,
+            len_x : 2,
+            len_y : 2,
             len_z : 0.2,
             x : pos[0],
             y : pos[1],
             z : pos[2],
           }
         //   this.bounding_box = [
-        //     0.4,
         //     0.6,
+        //     1.2,
         //     0.2,
         //     pos[0],
         //     pos[1],
@@ -28,7 +26,7 @@ let sneaker = class {
         //   ];
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
 
-        var len_x = 0.2, len_y = 0.3, len_z = 0.1;
+        var len_x = 1, len_y = 1, len_z = 0.1;
 
         this.positions = [
             // Front face
@@ -182,21 +180,21 @@ let sneaker = class {
             textureCoord: textureCoordBuffer,
             indices: indexBuffer,
         }
-        this.texture = loadTexture(gl, 'images/sneaker.jpg');
+        this.texture = loadTexture(gl, 'images/barricade.jpeg');
     }
 
     tick() {
         this.bounding_box = {
-            len_x : 0.4,
-            len_y : 0.6,
+            len_x : 2,
+            len_y : 2,
             len_z : 0.2,
             x : this.pos[0],
             y : this.pos[1],
             z : this.pos[2],
           }
-    }
+    };
 
-    drawSneaker(gl, projectionMatrix, programInfo, deltaTime) {
+    drawBarricade(gl, projectionMatrix, programInfo, deltaTime) {
         const modelViewMatrix = mat4.create();
         mat4.translate(
             modelViewMatrix,
