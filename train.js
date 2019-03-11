@@ -6,24 +6,15 @@ let train = class {
         this.speed = 0.5;
         this.len_x = 0.8;
         this.len_y = 2;
-        this.len_z = 2;
+        this.len_z = 4;
         this.bounding_box = {
             len_x : 1.6,
             len_y : 4,
-            len_z : 4,
+            len_z : 8,
             x : pos[0],
             y : pos[1],
             z : pos[2],
           }
-
-        // this.bounding_box = [
-        //     1.6,
-        //     4,
-        //     4,
-        //     pos[0],
-        //     pos[1],
-        //     pos[2],
-        // ];
           
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
 
@@ -186,7 +177,7 @@ let train = class {
         this.bounding_box = {
             len_x : 1.6,
             len_y : 4,
-            len_z : 4,
+            len_z : 8,
             x : this.pos[0],
             y : this.pos[1],
             z : this.pos[2],

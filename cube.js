@@ -1,7 +1,7 @@
 /// <reference path="webgl.d.ts" />
 
 let cube = class {
-    constructor(gl, pos) {
+    constructor(gl, pos, imgsrc, lx, ly, lz) {
         this.positionBuffer = gl.createBuffer();
         this.jump = false;
         this.speed = 0.2;
@@ -16,17 +16,9 @@ let cube = class {
             y : pos[1],
             z : pos[2],
           }
-        //   this.bounding_box = [
-        //     0.6,
-        //     1.2,
-        //     0.2,
-        //     pos[0],
-        //     pos[1],
-        //     pos[2],
-        //   ];
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
 
-        var len_x = 0.3, len_y = 0.6, len_z = 0.1;
+        var len_x = lx / 2, len_y = ly / 2, len_z = lz / 2;
 
         this.positions = [
             // Front face
@@ -180,7 +172,7 @@ let cube = class {
             textureCoord: textureCoordBuffer,
             indices: indexBuffer,
         }
-        this.texture = loadTexture(gl, 'images/wall.jpg');
+        this.texture = loadTexture(gl, imgsrc);
     }
 
     tick() {

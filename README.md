@@ -1,13 +1,8 @@
-## Subway Surfer
+## Subway Surfer on WebGL
 
 
 ## Controls
-- left cursor to move left.
-- right cursor to move right.
-- up cursor to jump.
-- down cursor to duck.
-- "G" to convert into Grayscale.
-- "C" to revert back to normal from grayscale.
-
-
-
+- left arrow to move left.
+- right arrow to move right.
+- space key to jump.
+- "G" to switch to and from Grayscale.

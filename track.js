@@ -70,7 +70,7 @@ let track = class {
             textureCoord: textureCoordBuffer,
             indices: indexBuffer,
         }
-        this.texture = loadTexture(gl, 'images/track.jpg');
+        this.texture = loadTexture(gl, 'images/track1.jpg');
     }
 
     drawTrack(gl, projectionMatrix, programInfo, deltaTime) {

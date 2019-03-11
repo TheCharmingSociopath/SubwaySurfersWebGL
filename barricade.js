@@ -9,7 +9,7 @@ let barricade = class {
         this.sneaker = false;
         this.acceleration = 0;
         this.bounding_box = {
-            len_x : 2,
+            len_x : 1.6,
             len_y : 2,
             len_z : 0.2,
             x : pos[0],
@@ -26,7 +26,7 @@ let barricade = class {
         //   ];
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
 
-        var len_x = 1, len_y = 1, len_z = 0.1;
+        var len_x = 0.8, len_y = 1, len_z = 0.1;
 
         this.positions = [
             // Front face
@@ -185,7 +185,7 @@ let barricade = class {
 
     tick() {
         this.bounding_box = {
-            len_x : 2,
+            len_x : 1.6,
             len_y : 2,
             len_z : 0.2,
             x : this.pos[0],

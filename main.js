@@ -7,6 +7,7 @@ var map = {
 
 var inp_left, inp_right, inp_grey;
 var player,
+  policeman,
   tracks = [],
   walls = [],
   trains = [],
@@ -32,7 +33,8 @@ function main() {
   const canvas = document.querySelector('#glcanvas');
   const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
 
-  player = new cube(gl, [0, 2, 0]);
+  player = new hero(gl, [0, 1.5, 0]);
+  policeman = new police(gl, [0, 1.5, 4]);
 
   for (i = 0; i < 400; ++i) {
     tracks.push(new track(gl, [0, 0, -i]));
@@ -59,6 +61,13 @@ function main() {
     if (i % 3 == 0) coins.push(new coin(gl, [0, 2, -z]));
     else if (i % 3 == 1) coins.push(new coin(gl, [2.0, 2, -z]));
     else if (i % 3 == 2) coins.push(new coin(gl, [-2.0, 2, -z]));
+  }
+
+  for (i = 0; i < 40; i += 1) {
+    let z = Math.floor(Math.random() * 100) % 50;
+    if (i % 3 == 0) coins.push(new coin(gl, [0, 2, -z]));
+    else if (i % 3 == 1) coins.push(new coin(gl, [2.0, 6, -z]));
+    else if (i % 3 == 2) coins.push(new coin(gl, [-2.0, 6, -z]));
   }
 
   for (i = 0; i < 5; ++i) {
@@ -234,7 +243,7 @@ function drawScene(gl, programInfo, deltaTime) {
   // and we only want to see objects between 0.1 units
   // and 100 units away from the camera.
 
-  eye = [0, 5, player.pos[2] + 8];
+  eye = [0, 5, player.pos[2] + 10];
   target = [0, player.pos[1], player.pos[2] - 5];
 
   const fieldOfView = 45 * Math.PI / 180; // in radians
@@ -284,7 +293,8 @@ function drawScene(gl, programInfo, deltaTime) {
   for (b of barricades)
     b.drawBarricade(gl, viewProjectionMatrix, programInfo, deltaTime);
 
-  player.drawCube(gl, viewProjectionMatrix, programInfo, deltaTime);
+  player.drawPlayer(gl, viewProjectionMatrix, programInfo, deltaTime);
+  policeman.drawPolice(gl, viewProjectionMatrix, programInfo, deltaTime);
 
   jetpacks.drawJetpack(gl, viewProjectionMatrix, programInfo, deltaTime);
   sneakers.drawSneaker(gl, viewProjectionMatrix, programInfo, deltaTime);
@@ -310,7 +320,6 @@ function initShaderProgram(gl, vsSource, fsSource) {
     alert('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
     return null;
   }
-
   return shaderProgram;
 }
 
@@ -404,14 +413,20 @@ function tick_input() {
     inp_left = true;
   else if (inp_left) {
     if (player.pos[0] != -1.7)
+    {
       player.pos[0] -= 1.7;
+      policeman.pos[0] -= 1.7;
+    }
     inp_left = false;
   }
   if (map[39]) // right
     inp_right = true;
   else if (inp_right) {
     if (player.pos[0] != 1.7)
+    {
       player.pos[0] += 1.7;
+      policeman.pos[0] += 1.7;
+    }
     inp_right = false;
   }
   if (map[32] && !player.jetpack) // space
@@ -431,7 +446,6 @@ function tick_input() {
     if (programInfo == programInfoColour) programInfo = programInfo2Grey;
     else programInfo = programInfoColour;
     inp_grey = false;
-    console.log('erer');
   }
 };
 
@@ -439,6 +453,8 @@ function tick_elements() {
   tick_input();
   move_objects();
   collisions();
+  player.tick();
+  policeman.tick();
 
   document.getElementById('score').innerHTML = 'Score: ' + score;
   document.getElementById('coins').innerHTML = 'Coins: ' + coins_collected;
@@ -447,12 +463,13 @@ function tick_elements() {
     document.getElementById('game').innerHTML = 'Game Over';
   }
 
-  if (player.pos[2] <= -400) {
+  if (player.pos[2] <= -200) {
     document.getElementById('game').innerHTML = 'Game Complete';
   }
 
-  if ((-player.pos[2]) % 2 == 0) ++score;
+  ++score;
   player.pos[2] -= player.speed;
+  policeman.pos[2] -= 0.2;
 
   for (t of trains) {
     t.tick();
@@ -468,6 +485,7 @@ function tick_elements() {
   if (player.jump) {
     player.pos[1] += player.acceleration;
     player.acceleration -= 0.1;
+    player.on_train = false;
     if (!player.sneaker && player.acceleration <= -0.8) {
       player.jump = false;
       player.pos[1] = 2;
@@ -475,15 +493,16 @@ function tick_elements() {
       player.jump = false;
       player.pos[1] = 2;
     }
+    player.tick();
   }
 
   if (player.pos[1] <= 2) player.pos[1] = 2;
 
   if (player.jetpack) {
     player.pos[1] += 0.1;
-    if (player.pos[1] > 5)
-      player.pos[1] = 5;
-    player.rotation = Math.PI;
+    if (player.pos[1] > 6)
+      player.pos[1] = 6;
+    // player.rotation = Math.PI;
   }
 };
 
@@ -514,22 +533,42 @@ function collisions() {
     }
   }
 
+  let flag = false;
   for (t of trains) {
     if (detect_collisions(t.bounding_box, player.bounding_box)) {
+      flag = true;
 
+      if(player.jump)
+      {
+        player.pos[1] = 5.5;
+        player.jump = false;
+        player.on_train = true;
+        player.acceleration = 0;
+      }
+      else
       if (player.pos[2] + 2 > t.pos[2]) {
         death_sound.play();
         game_over = true;
       } else {
+        if (player.speed == 0.1){
+          death_sound.play();
+          game_over = true;
+        }
         player.speed = 0.1;
         setTimeout(
           function slow() {
             player.speed = 0.2;
+            policeman.pos[2] = player.pos[2] + 4;
           },
           2000,
         );
       }
     }
+  }
+
+  if (!flag && player.on_train) {
+    player.jump = true;
+    // player.acceleration = -0.5;
   }
 
   for (b of barricades) {
@@ -543,7 +582,7 @@ function collisions() {
     player.sneaker = true;
     setTimeout(
       function remove_sneaker() {
-        this.sneaker = false;
+        player.sneaker = false;
       },
       10000,
     );
